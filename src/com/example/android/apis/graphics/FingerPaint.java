@@ -61,7 +61,7 @@ public class FingerPaint extends GraphicsActivity
         private static final float MAXP = 0.75f;
 
         private Bitmap  mBitmap;
-        private Canvas  mCanvas;
+        private Canvas  mCanvas;//临时画布
         private Path    mPath;
         private Paint   mBitmapPaint;
 
@@ -81,11 +81,10 @@ public class FingerPaint extends GraphicsActivity
 
         @Override
         protected void onDraw(Canvas canvas) {
-            canvas.drawColor(0xFFAAAAAA);//如果不设置则为黑色
+            canvas.drawColor(0xFFAAAAAA);//如果不设置则为背景为黑色
 
-            canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
-            //重新绘制bitmap到canvas上，就是保留之前的笔迹,如果注释此行 则下一个绘制的时候，上一笔画无法保留
-            //总结：canvas中的bitmap必须要要重绘才有记忆功能。
+           canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+            //将历史笔迹绘制到view的canvas上，
             canvas.drawPath(mPath, mPaint);
         }
 
@@ -110,9 +109,9 @@ public class FingerPaint extends GraphicsActivity
         private void touch_up() {
             mPath.lineTo(mX, mY);
             // commit the path to our offscreen
-            mCanvas.drawPath(mPath, mPaint);//会绘制到bitmap上，
+            mCanvas.drawPath(mPath, mPaint);//会绘制到bitmap上，最后会将bitmap绘制到view的Canvas上
             // kill this so we don't double draw
-//            mPath.reset(); 和touch_start 中的重复 可以注释
+            mPath.reset(); //和touch_start 中的重复 可以注释
         }
 
         @Override
