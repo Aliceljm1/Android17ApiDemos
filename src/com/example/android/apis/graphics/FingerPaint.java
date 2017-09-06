@@ -215,7 +215,8 @@ public class FingerPaint extends GraphicsActivity
                 }
                 return true;
             case ERASE_MENU_ID:
-                mPaint.setXfermode(new PorterDuffXfermode(
+                //设定为清除模式，会留下黑色的线条
+            	mPaint.setXfermode(new PorterDuffXfermode(
                                                         PorterDuff.Mode.CLEAR));
                 return true;
             case SRCATOP_MENU_ID:
