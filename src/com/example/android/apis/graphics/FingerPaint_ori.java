@@ -16,9 +16,6 @@
 
 package com.example.android.apis.graphics;
 
-import com.example.android.apis.ljm.SoftPath;
-import com.example.android.apis.ljm.SingleTouchEvent;
-
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
@@ -27,7 +24,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
-public class FingerPaint extends GraphicsActivity
+public class FingerPaint_ori extends GraphicsActivity
         implements ColorPickerDialog.OnColorChangedListener {
 
     @Override
@@ -35,6 +32,14 @@ public class FingerPaint extends GraphicsActivity
         super.onCreate(savedInstanceState);
         setContentView(new MyView(this));
 
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setDither(true);
+        mPaint.setColor(0xFFFF0000);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeJoin(Paint.Join.ROUND);
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mPaint.setStrokeWidth(12);
 
         mEmboss = new EmbossMaskFilter(new float[] { 1, 1, 1 },
                                        0.4f, 6, 3.5f);
@@ -58,23 +63,12 @@ public class FingerPaint extends GraphicsActivity
         private Bitmap  mBitmap;
         private Canvas  mCanvas;//临时画布
         private Path    mPath;
-        private SoftPath mps;
         private Paint   mBitmapPaint;
 
         public MyView(Context c) {
             super(c);
-            
-            mPaint = new Paint();
-            mPaint.setAntiAlias(true);
-            mPaint.setDither(true);
-            mPaint.setColor(0xFFFF0000);
-            mPaint.setStyle(Paint.Style.STROKE);
-            mPaint.setStrokeJoin(Paint.Join.ROUND);
-            mPaint.setStrokeCap(Paint.Cap.ROUND);
-            mPaint.setStrokeWidth(12);
-            
+
             mPath = new Path();
-            mps=new SoftPath(mPaint);
             mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         }
 
@@ -88,69 +82,54 @@ public class FingerPaint extends GraphicsActivity
         @Override
         protected void onDraw(Canvas canvas) {
             canvas.drawColor(0xFFAAAAAA);//如果不设置则为背景为黑色
+
            canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
             //将历史笔迹绘制到view的canvas上，
-//            canvas.drawPath(mPath, mPaint);
-           if(mps!=null)
-            mps.draw(canvas);
+            canvas.drawPath(mPath, mPaint);
         }
 
         private float mX, mY;
         private static final float TOUCH_TOLERANCE = 4;
 
-        private void touch_start(float x, float y,SingleTouchEvent stouch) {
-//            mPath.reset();
-//            mPath.moveTo(x, y);
-        	if(mps==null)
-        		mps=new SoftPath(mPaint);
-            mps.reset();
-            mps.touchEvent(stouch);
-            
+        private void touch_start(float x, float y) {
+            mPath.reset();
+            mPath.moveTo(x, y);
             mX = x;
             mY = y;
         }
-        private void touch_move(float x, float y,SingleTouchEvent stouch) {
+        private void touch_move(float x, float y) {
             float dx = Math.abs(x - mX);
             float dy = Math.abs(y - mY);
             if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-//                mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
-				if(mps!=null)
-					mps.touchEvent(stouch);//add by ljm
-			
+                mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
                 mX = x;
                 mY = y;
             }
         }
-        private void touch_up(SingleTouchEvent stouch) {
-        	mps.lineTo(mX,mY);
-        	mCanvas.drawPath(mps, mPaint);
-        	mps=null;
-        	
-        	//            mPath.lineTo(mX, mY);
-//            // commit the path to our offscreen
-//            mCanvas.drawPath(mPath, mPaint);//会绘制到bitmap上，最后会将bitmap绘制到view的Canvas上
-//            // kill this so we don't double draw
-//            mPath.reset(); //和touch_start 中的重复 可以注释
-            
-            
+        private void touch_up() {
+            mPath.lineTo(mX, mY);
+            // commit the path to our offscreen
+            mCanvas.drawPath(mPath, mPaint);//会绘制到bitmap上，最后会将bitmap绘制到view的Canvas上
+            // kill this so we don't double draw
+            mPath.reset(); //和touch_start 中的重复 可以注释
         }
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             float x = event.getX();
             float y = event.getY();
-        	SingleTouchEvent stouch=new SingleTouchEvent(event);//规
+
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    touch_start(x, y,stouch);
+                    touch_start(x, y);
                     invalidate();
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    touch_move(x, y,stouch);
+                    touch_move(x, y);
                     invalidate();
                     break;
                 case MotionEvent.ACTION_UP:
-                    touch_up(stouch);
+                    touch_up();
 //                    invalidate(); 可以注释
                     break;
             }
